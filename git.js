@@ -21,6 +21,7 @@ const fetch = (remote) => spawnSingleLine('git', `fetch ${remote}`, {cwd : '.'})
 const getRefSha1 = (ref, cwd) => spawnSingleLine('git', `rev-parse ${ref}`, {cwd});
 const getUserName = () => spawnSingleLine('git', 'config --global user.name', {cwd: '.'});
 const getCommitMessage = (sha1) => spawnSingleLine('git', `log --format=%B -n 1 ${sha1}`, {cwd: '.'});
+const changeCommitMessage = (message) => spawnSingleLine('git', `commit --amend -m  ${message}`, {cwd: '.'});
 
 module.exports = {
   fetch,

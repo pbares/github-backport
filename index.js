@@ -14,6 +14,7 @@ const state = {}; // a global state to store object
 
 async function createBranchForPullRequest(message, parentBranch) {
     // Should start with a ticket number
+    state.message = commitMessage;
     const trimmed = message.trimStart();
     const ticket = trimmed.substr(0, trimmed.indexOf(' '));
     const type = ticket.substr(0, ticket.indexOf('-'));
@@ -35,7 +36,6 @@ async function cherryPick() {
 async function getAndSetCurrentBranch() {
     const currentBranch = await git.getCurrentBranch();
     state.parentBranch = currentBranch;
-    return;
 }
 
 async function createPR() {
@@ -45,8 +45,14 @@ async function createPR() {
         return system.spawnSingleLine('/opt/google/chrome/chrome', url, { cwd: '.' });
     } else {
         console.log(`Create a PR: ${url}`);
-        return;
     }
+}
+
+async function changeCommitMessage(newMessage, oldMessage) {
+    if (newCommitMessage !== oldMessage) {
+        // Change the message
+        return git.changeCommitMessage(newCommitMessage);
+    } 
 }
 
 git.fetch('')
@@ -60,8 +66,12 @@ git.fetch('')
         state.sha1 = sha1;
         return git.getCommitMessage(sha1);
     })
-    .then(commitMessage => ui.chooseDefaultOrInputNew('Keep this commit message', commitMessage))
-    .then(commitMessage => createBranchForPullRequest(commitMessage, state.parentBranch))
+    .then(message => {
+        state.previousCommitMessage = message;
+        return ui.chooseDefaultOrInputNew('Keep this commit message', message);
+    })
+    .then(newCommitMessage => changeCommitMessage(newCommitMessage))
+    .then(message => createBranchForPullRequest(message, state.parentBranch))
     .then(branch => {
         state.branch = branch;
         return git.createBranch(branch)
