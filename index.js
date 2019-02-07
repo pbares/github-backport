@@ -14,7 +14,7 @@ const state = {}; // a global state to store object
 
 async function createBranchForPullRequest(message, parentBranch) {
     // Should start with a ticket number
-    state.message = commitMessage;
+    state.message = message;
     const trimmed = message.trimStart();
     const ticket = trimmed.substr(0, trimmed.indexOf(' '));
     const type = ticket.substr(0, ticket.indexOf('-'));
@@ -49,15 +49,27 @@ async function createPR() {
 }
 
 async function changeCommitMessage(newMessage, oldMessage) {
-    if (newCommitMessage !== oldMessage) {
+    if (newMessage !== oldMessage) {
         // Change the message
-        return git.changeCommitMessage(newCommitMessage);
+        console.log("New message: " + newMessage)
+        await git.changeCommitMessage(newMessage);
+        return newMessage;
     } 
+    return oldMessage;
+}
+
+function readSha1OrAsktoUser() {
+    let sha1 = process.argv[2];
+    if(!sha1) {
+        return ui.freeTextInput("Enter the sha1", "");
+    } else {
+        return Promise.resolve(sha1);
+    }
 }
 
 git.fetch('')
     .then(() => getAndSetCurrentBranch())
-    .then(() => ui.freeTextInput("Enter the sha1", ""))
+    .then(() => readSha1OrAsktoUser())
     .then(sha1 => {
         if(!sha1 || 0 === sha1.length) {
             console.error(chalk.red("Please enter a sha1"));
@@ -70,7 +82,7 @@ git.fetch('')
         state.previousCommitMessage = message;
         return ui.chooseDefaultOrInputNew('Keep this commit message', message);
     })
-    .then(newCommitMessage => changeCommitMessage(newCommitMessage))
+    .then(message => changeCommitMessage(message, state.previousCommitMessage))
     .then(message => createBranchForPullRequest(message, state.parentBranch))
     .then(branch => {
         state.branch = branch;

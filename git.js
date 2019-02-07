@@ -1,10 +1,7 @@
-const path = require('path');
-const os = require('os');
-const chalk = require('chalk');
-
-const {spawnRaw, spawn, spawnLines, spawnSingleLine} = require('./system.js');
+const {spawnRaw, spawn, spawnLines, spawnSingleLine, zob} = require('./system.js');
 
 const pull = () => spawn('git', 'pull', {cwd: '.'});
+const merge = branchName => spawn('git', `merge ${branchName}`, {cwd: '.'});
 const fetchTags = () => spawn('git', 'fetch --tags', {cwd: '.'});
 const listTags = () => spawnLines('git', 'tag', {cwd: '.'});
 const cherryPick = (sha1) => spawnLines('git', `cherry-pick ${sha1}`, {cwd: '.'});
@@ -21,14 +18,17 @@ const fetch = (remote) => spawnSingleLine('git', `fetch ${remote}`, {cwd : '.'})
 const getRefSha1 = (ref, cwd) => spawnSingleLine('git', `rev-parse ${ref}`, {cwd});
 const getUserName = () => spawnSingleLine('git', 'config --global user.name', {cwd: '.'});
 const getCommitMessage = (sha1) => spawnSingleLine('git', `log --format=%B -n 1 ${sha1}`, {cwd: '.'});
-const changeCommitMessage = (message) => spawnSingleLine('git', `commit --amend -m  ${message}`, {cwd: '.'});
+const changeCommitMessage = (message) => spawnSingleLine('git', `commit --amend -m '${message}'`, {cwd: '.'});
 
 module.exports = {
   fetch,
+  pull,
+  merge,
   getCurrentBranch,
   getCommitMessage,
   checkout,
   cherryPick,
   createBranch,
   pushBranch,
+  changeCommitMessage,
 };
